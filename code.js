@@ -1,6 +1,6 @@
 const fs = require('fs');
 
-// Function to parse points from points_small file
+// Function to parse points from points_small.txt or points_large.txt file
 const parsePoints = (data) =>  {
     return data.trim().split('\n').map((line, index) => {
         const [x, y, z, label] = line.slice(1, -1).split(', ');
@@ -71,8 +71,10 @@ const getSmallestTetrahedron = (points) => {
     return minTetrahedron ? minTetrahedron.sort((a, b) => a - b) : null;
 };
 
-// Read the file
-fs.readFile('./points_small.txt', 'utf8', (err, data) => {
+const smallFile = './points_small.txt';
+const largeFile = './points_large.txt';
+// Reading txt file...
+fs.readFile(smallFile, 'utf8', (err, data) => {
     if (err) {
         console.error('Error reading the file:', err);
         return;
@@ -108,9 +110,9 @@ fs.readFile('./points_small.txt', 'utf8', (err, data) => {
         }
     }
     
-    // Printing result
+    // Printing result...
     if (smallestTetrahedron) {
-        console.log('Smallest Tetrahedron Indices from all labels:', smallestTetrahedron);
+        console.log('Smallest Tetrahedron Indices:', ...smallestTetrahedron);
     } else {
         console.log('Not enough points to form a tetrahedron.');
     };
