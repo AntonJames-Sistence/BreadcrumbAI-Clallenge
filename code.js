@@ -47,7 +47,7 @@ const volumeOfTetrahedron = (p1, p2, p3, p4) => {
 };
 
 // Function to find smallest tetrahedron for specific label
-function getSmallestTetrahedron(points) {
+const getSmallestTetrahedron = (points) => {
     const n = points.length;
     if (n < 4) return null;
   
@@ -78,9 +78,11 @@ fs.readFile('./points_small.txt', 'utf8', (err, data) => {
         return;
     }
 
-    // Parsing data
+    // Parsing data...
     const points = parsePoints(data);
-    // Grouping points
+    // console.log(points);
+
+    // Grouping points...
     const groupedPoints = groupPointsByLabel(points);
     // console.log(groupedPoints);
 
@@ -90,19 +92,19 @@ fs.readFile('./points_small.txt', 'utf8', (err, data) => {
     for (const label in groupedPoints) {
         const tetrahedron = getSmallestTetrahedron(groupedPoints[label]);
 
-      if (tetrahedron) {
-        // console.log(`Smallest Tetrahedron Indices:`, tetrahedron, `from ${label} label group`)
+        if (tetrahedron) {
+            // console.log(`Smallest Tetrahedron Indices:`, tetrahedron, `from ${label} label group`)
 
-        const currentVolume = volumeOfTetrahedron(
-            points[tetrahedron[0]],
-            points[tetrahedron[1]],
-            points[tetrahedron[2]],
-            points[tetrahedron[3]]
-        );
-        if (currentVolume < minVolume) {
-            minVolume = currentVolume;
-            smallestTetrahedron = tetrahedron;
-        };
+            const currentVolume = volumeOfTetrahedron(
+                points[tetrahedron[0]],
+                points[tetrahedron[1]],
+                points[tetrahedron[2]],
+                points[tetrahedron[3]]
+            );
+            if (currentVolume < minVolume) {
+                minVolume = currentVolume;
+                smallestTetrahedron = tetrahedron;
+            };
         }
     }
     
