@@ -1,87 +1,140 @@
-# Breadcrumb.ai Programming Challenge
+# Challenge Solution
 
-Welcome to the programming screening for Breadcrumb.ai! 
+## Overview
 
-This challenge is designed to assess your problem-solving and programming skills. Please read the instructions carefully before you begin.
+This solution is designed to read a file containing 3D points with labels, group the points by label, and then find the smallest tetrahedron (by volume) formed by four points with the same label. The solution is divided into several functions to manage different parts of the process:
 
-## Instructions
+1. **parsePoints**
+2. **groupPointsByLabel**
+3. **volumeOfTetrahedron**
+4. **getSmallestTetrahedronForEachLabel**
+5. **getSmallestTetrahedron**
 
-1. You will be provided links to download two files: `points_small.txt` and `points_large.txt`.
-2. Your task is to write a program that processes these files to solve the given problem.
-3. After running your program on each file, enter the results into this form.
-4. The results should be submitted in the specified format.
-5. Ensure that you are signed into your Google account, as we will use this email to contact you regarding next steps.
-
-## Problem Description
-
-You are to write a program that reads a list of points on a 3D plane from a file. Each point is defined by its coordinates and a label and is presented in the following format: `(x, y, z, 'label')`, where `x`, `y`, and `z` are floats with two decimal points, and `'label'` is a character ranging from 'A' to 'Z' and 'a' to 'z'.
-
-### Your Task
-
-Identify the indices of four points that form a tetrahedron with the smallest possible volume. The resultant four points must have the same associated letter to be a valid tetrahedron.
-
-The output should list the zero-based indices of these four points in ascending order.
-
-## File Links
-
-<!-- - [Download points_small.txt](#)
-- [Download points_large.txt](#) -->
-
-## Answer Submission
-
-Your code should return a list of four points that form the smallest tetrahedron for each input file. Enter the indices of the four points for each file in the below input boxes. 
-You should input the indexes in ascending order.
-Make sure that the indexes start at 0.
-Only enter a number (integer) in the following boxes.
-Attempt to solve both files `points_small.txt` and `points_large.txt`, if not, feel free to submit answers for `points_small.txt`.
-
-## Example
-
-Suppose `points_small.txt` contains the following lines:
-```js
-(3.00, 4.00, 5.00, 'A')
-(2.00, 3.00, 3.00, 'A')
-(1.00, 2.00, 2.00, 'B')
-(3.50, 4.50, 5.50, 'A')
-(2.50, 3.50, 3.50, 'A')
-(2.50, 3.00, 7.00, 'B')
+### `parsePoints`
+This function parses the input data from a text file. It splits the data into individual lines, then extracts the coordinates and labels for each point. It returns an array of objects, where each object represents a point with its x, y, z coordinates, label, and index.
+```javascript
+const parsePoints = (data) =>  {
+    return data.trim().split('\n').map((line, index) => {
+        const [x, y, z, label] = line.slice(1, -1).split(', ');
+        return {
+            x: parseFloat(x),
+            y: parseFloat(y),
+            z: parseFloat(z),
+            label: label.slice(1, -1),
+            index: index
+        };
+    });
+};
 ```
 
-If the tetrahedron with the smallest volume is formed by the points at indices 0, 1, 3, and 4 (all have the letter 'A'), your answer should be entered as: `0, 1, 3, 4`.
+### `groupPointsByLabel`
+This function groups the parsed points by their labels. It iterates through the array of points and organizes them into a dictionary (object) where the keys are the labels and the values are arrays of points associated with those labels.
+```javascript
+const groupPointsByLabel = (points) => {
+    const groups = {};
+    points.forEach((point) => {
+      if (!groups[point.label]) {
+        groups[point.label] = [];
+      }
+      groups[point.label].push(point);
+    });
+    return groups;
+}
+```
 
-## Hint
+### `volumeOfTetrahedron`
+This function calculates the volume of a tetrahedron formed by four points in 3D space. It uses the scalar triple product to compute the volume, which is a measure of how much space the tetrahedron occupies.
+```javascript
+const volumeOfTetrahedron = (p1, p2, p3, p4) => {
+    const AB = { x: p2.x - p1.x, y: p2.y - p1.y, z: p2.z - p1.z };
+    const AC = { x: p3.x - p1.x, y: p3.y - p1.y, z: p3.z - p1.z };
+    const AD = { x: p4.x - p1.x, y: p4.y - p1.y, z: p4.z - p1.z };
 
-To calculate the volume, you can use the following Python function:
+    const crossProduct = {
+        x: AB.y * AC.z - AB.z * AC.y,
+        y: AB.z * AC.x - AB.x * AC.z,
+        z: AB.x * AC.y - AB.y * AC.x
+    };
 
-```python
-def volume_of_tetrahedron(p1, p2, p3, p4):
-    # Vectors from p1 to p2, p3, and p4
-    AB = (p2[0] - p1[0], p2[1] - p1[1], p2[2] - p1[2])
-    AC = (p3[0] - p1[0], p3[1] - p1[1], p3[2] - p1[2])
-    AD = (p4[0] - p1[0], p4[1] - p1[1], p4[2] - p1[2])
+    const scalarTripleProduct = AD.x * crossProduct.x + AD.y * crossProduct.y + AD.z * crossProduct.z;
 
-    # Direct calculation of the cross product components
-    cross_product_x = AB[1] * AC[2] - AB[2] * AC[1]
-    cross_product_y = AB[2] * AC[0] - AB[0] * AC[2]
-    cross_product_z = AB[0] * AC[1] - AB[1] * AC[0]
+    return Math.abs(scalarTripleProduct) / 6.0;
+};
+```
 
-    # Dot product of AD with the cross product of AB and AC
-    scalar_triple_product = (
-        AD[0] * cross_product_x +
-        AD[1] * cross_product_y +
-        AD[2] * cross_product_z
-    )
+### `getSmallestTetrahedronForEachLabel`
+This function finds the smallest tetrahedron for a specific group of points (with the same label). It iterates through all possible combinations of four points within the group, calculates the volume for each combination, and keeps track of the smallest volume found.
+```javascript
+const getSmallestTetrahedronForEachLabel = (points) => {
+    const n = points.length;
+    if (n < 4) return null;
 
-    # The volume of the tetrahedron
-    volume = abs(scalar_triple_product) / 6.0
-    return volume
+    let minVolume = Infinity;
+    let minTetrahedron = null;
 
-# Example points
-A = (1, 2, 3)
-B = (2, 3, 4)
-C = (1, 5, 1)
-D = (4, 2, 3)
+    for (let i = 0; i < n - 3; i++) {
+      for (let j = i + 1; j < n - 2; j++) {
+        for (let k = j + 1; k < n - 1; k++) {
+          for (let l = k + 1; l < n; l++) {
+            const volume = volumeOfTetrahedron(points[i], points[j], points[k], points[l]);
+            if (volume < minVolume) {
+              minVolume = volume;
+              minTetrahedron = [points[i].index, points[j].index, points[k].index, points[l].index];
+            }
+          }
+        }
+      }
+    }
 
-# Calculate the volume
-vol = volume_of_tetrahedron(A, B, C, D)
-print(f"The volume of the tetrahedron is {vol}")
+    return minTetrahedron ? minTetrahedron.sort((a, b) => a - b) : null;
+};
+```
+
+### `getSmallestTetrahedron`
+This function integrates all the other functions to find the smallest tetrahedron in the given file. It reads the file, parses the points, groups them by label, finds the smallest tetrahedron for each label, and finally determines the smallest tetrahedron among all labels. The result is printed to the console.
+```javascript
+const getSmallestTetrahedron = (pathToFile) => {
+    fs.readFile(pathToFile, 'utf8', (err, data) => {
+        if (err) {
+            console.error('Error reading the file:', err);
+            return;
+        }
+
+        const points = parsePoints(data);
+        const groupedPoints = groupPointsByLabel(points);
+
+        let smallestTetrahedron = null;
+        let minVolume = Infinity;
+
+        for (const label in groupedPoints) {
+            const currentTetrahedron = getSmallestTetrahedronForEachLabel(groupedPoints[label]);
+            if (currentTetrahedron) {
+                const currentVolume = volumeOfTetrahedron(
+                    points[currentTetrahedron[0]],
+                    points[currentTetrahedron[1]],
+                    points[currentTetrahedron[2]],
+                    points[currentTetrahedron[3]]
+                );
+                if (currentVolume < minVolume) {
+                    minVolume = currentVolume;
+                    smallestTetrahedron = currentTetrahedron;
+                }
+            }
+        }
+
+        if (smallestTetrahedron) {
+            console.log(`Smallest tetrahedron Indices from`, pathToFile, `file are:`, smallestTetrahedron);
+        } else {
+            console.log('Not enough points to form a tetrahedron.');
+        }
+    });
+};
+```
+
+# Usage
+Just run the file in console
+
+```terminal
+node code.js
+```
+This will process both small and large files and print the indices of the points forming the smallest tetrahedron for each file into console.
