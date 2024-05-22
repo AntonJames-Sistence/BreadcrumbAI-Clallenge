@@ -132,7 +132,7 @@ const getSmallestTetrahedron = (pathToFile) => {
 ```
 
 # Usage
-Just run the file in console
+cd into the folder and run the file from your terminal
 
 ```terminal
 node code.js
